@@ -21,6 +21,8 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -106,6 +108,10 @@ import com.google.gson.annotations.SerializedName;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
+
+import javax.websocket.ContainerProvider;
+import javax.websocket.DeploymentException;
+import javax.websocket.WebSocketContainer;
 
 
 /**
@@ -330,6 +336,8 @@ public class HeartBeatHandler {
 
     Host host = clusterFsm.getHost(hostname);
     HealthStatus healthStatus = host.getHealthStatus().getHealthStatus();
+    boolean persistExists = false;
+
 
     if (!healthStatus.equals(HostHealthStatus.HealthStatus.UNKNOWN)) {
 
@@ -414,6 +422,7 @@ public class HeartBeatHandler {
 
         host.setStatus(healthStatus.name());
         host.persist();
+        persistExists = true;
       }
 
       //If host doesn't belong to any cluster
@@ -421,7 +430,22 @@ public class HeartBeatHandler {
         healthStatus = HealthStatus.HEALTHY;
         host.setStatus(healthStatus.name());
         host.persist();
+        persistExists = true;
       }
+    }
+    if(persistExists){
+        try {
+            String dest = "ws://localhost:8080/";
+            WebSocketClient socket = new WebSocketClient();
+            WebSocketContainer container = ContainerProvider.getWebSocketContainer();
+            container.connectToServer(socket, new URI(dest));
+
+            socket.getLatch().await();
+            socket.sendMessage("Hello World");
+            Thread.sleep(10000l);
+        } catch (Throwable t) {
+            t.printStackTrace();
+        }
     }
   }
 
