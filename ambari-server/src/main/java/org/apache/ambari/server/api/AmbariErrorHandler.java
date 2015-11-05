@@ -46,7 +46,7 @@ public class AmbariErrorHandler extends ErrorHandler {
     AbstractHttpConnection connection = AbstractHttpConnection.getCurrentConnection();
     connection.getRequest().setHandled(true);
 
-    response.setContentType(MimeTypes.TEXT_PLAIN);
+    response.setContentType(String.valueOf(MimeTypes.Type.TEXT_PLAIN));
 
     Map<String, Object> errorMap = new LinkedHashMap<String, Object>();
     int code = connection.getResponse().getStatus();
