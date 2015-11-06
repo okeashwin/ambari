@@ -284,7 +284,9 @@
       </dependency>
 
 
-      <!--jsp support for jetty -->
+
+
+        <!--jsp support for jetty -->
       <dependency>
         <groupId>org.mortbay.jetty</groupId>
         <artifactId>jsp-api-2.1-glassfish</artifactId>

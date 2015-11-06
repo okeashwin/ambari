@@ -103,12 +103,7 @@ import org.apache.ambari.server.topology.TopologyRequestFactoryImpl;
 import org.apache.ambari.server.utils.StageUtils;
 import org.apache.ambari.server.view.ViewRegistry;
 import org.apache.velocity.app.Velocity;
-import org.eclipse.jetty.server.Connector;
-import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.SessionIdManager;
-import org.eclipse.jetty.server.SessionManager;
-import org.eclipse.jetty.server.nio.SelectChannelConnector;
-import org.eclipse.jetty.server.ssl.SslSelectChannelConnector;
+import org.eclipse.jetty.server.*;
 import org.eclipse.jetty.servlet.DefaultServlet;
 import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
@@ -247,9 +242,17 @@ public class AmbariServer {
   public void run() throws Exception {
     performStaticInjection();
     initDB();
-    server = new Server();
+      // Set jetty thread pool
+      QueuedThreadPool qtp = new QueuedThreadPool(configs.getAgentThreadPoolSize());
+      qtp.setName("qtp-ambari-agent");
+
+    server = new Server(qtp);
     server.setSessionIdManager(sessionIdManager);
-    Server serverForAgent = new Server();
+
+      qtp = new QueuedThreadPool(configs.getClientThreadPoolSize());
+      qtp.setName("qtp-client");
+
+    Server serverForAgent = new Server(qtp);
 
     DatabaseChecker.checkDBVersion();
     DatabaseChecker.checkDBConsistency();
@@ -338,9 +341,9 @@ public class AmbariServer {
       //Secured connector for 2-way auth
       SslContextFactory contextFactoryTwoWay = new SslContextFactory();
       disableInsecureProtocols(contextFactoryTwoWay);
-      SslSelectChannelConnector sslConnectorTwoWay = new
-          SslSelectChannelConnector(contextFactoryTwoWay);
-      sslConnectorTwoWay.setPort(configs.getTwoWayAuthPort());
+//      SslSelectChannelConnector sslConnectorTwoWay = new
+//          SslSelectChannelConnector(contextFactoryTwoWay);
+//      sslConnectorTwoWay.setPort(configs.getTwoWayAuthPort());
 
       Map<String, String> configsMap = configs.getConfigsMap();
       String keystore = configsMap.get(Configuration.SRVR_KSTR_DIR_KEY) +
@@ -348,19 +351,28 @@ public class AmbariServer {
       String truststore = configsMap.get(Configuration.SRVR_KSTR_DIR_KEY) +
           File.separator + configsMap.get(Configuration.TSTR_NAME_KEY);
       String srvrCrtPass = configsMap.get(Configuration.SRVR_CRT_PASS_KEY);
-      sslConnectorTwoWay.setKeystore(keystore);
-      sslConnectorTwoWay.setTruststore(truststore);
-      sslConnectorTwoWay.setPassword(srvrCrtPass);
-      sslConnectorTwoWay.setKeyPassword(srvrCrtPass);
-      sslConnectorTwoWay.setTrustPassword(srvrCrtPass);
-      sslConnectorTwoWay.setKeystoreType(configsMap.get(Configuration.KSTR_TYPE_KEY));
-      sslConnectorTwoWay.setTruststoreType(configsMap.get(Configuration.TSTR_TYPE_KEY));
-      sslConnectorTwoWay.setNeedClientAuth(configs.getTwoWaySsl());
+//      sslConnectorTwoWay.setKeystore(keystore);
+//      sslConnectorTwoWay.setTruststore(truststore);
+//      sslConnectorTwoWay.setPassword(srvrCrtPass);
+//      sslConnectorTwoWay.setKeyPassword(srvrCrtPass);
+//      sslConnectorTwoWay.setTrustPassword(srvrCrtPass);
+//      sslConnectorTwoWay.setKeystoreType(configsMap.get(Configuration.KSTR_TYPE_KEY));
+//      sslConnectorTwoWay.setTruststoreType(configsMap.get(Configuration.TSTR_TYPE_KEY));
+//      sslConnectorTwoWay.setNeedClientAuth(configs.getTwoWaySsl());
+
+      contextFactoryTwoWay.setKeyStorePath(keystore);
+      contextFactoryTwoWay.setTrustStorePath(truststore);
+      contextFactoryTwoWay.setKeyManagerPassword(srvrCrtPass);
+      contextFactoryTwoWay.setKeyStorePassword(srvrCrtPass);
+      contextFactoryTwoWay.setTrustStorePassword(srvrCrtPass);
+      contextFactoryTwoWay.setKeyStoreType(configsMap.get(Configuration.KSTR_TYPE_KEY));
+      contextFactoryTwoWay.setTrustStoreType(configsMap.get(Configuration.TSTR_TYPE_KEY));
+      contextFactoryTwoWay.setNeedClientAuth(configs.getTwoWaySsl());
 
       //SSL Context Factory
       SslContextFactory contextFactoryOneWay = new SslContextFactory(true);
       contextFactoryOneWay.setKeyStorePath(keystore);
-      contextFactoryOneWay.setTrustStore(truststore);
+      contextFactoryOneWay.setTrustStorePath(truststore);
       contextFactoryOneWay.setKeyStorePassword(srvrCrtPass);
       contextFactoryOneWay.setKeyManagerPassword(srvrCrtPass);
       contextFactoryOneWay.setTrustStorePassword(srvrCrtPass);
@@ -369,12 +381,23 @@ public class AmbariServer {
       contextFactoryOneWay.setNeedClientAuth(false);
       disableInsecureProtocols(contextFactoryOneWay);
 
+        //Server Connector for HTTP
+        ServerConnector httpOneWay = new ServerConnector(serverForAgent);
+        httpOneWay.setPort(configs.getOneWayAuthPort());
+        httpOneWay.setAcceptQueueSize(2);
+
+        ServerConnector httpTwoWay = new ServerConnector(serverForAgent);
+        httpTwoWay.setPort(configs.getOneWayAuthPort());
+        httpTwoWay.setAcceptQueueSize(2);
+
+        serverForAgent.setConnectors(new Connector[]{httpOneWay, httpTwoWay});
+
       //Secured connector for 1-way auth
-      SslSelectChannelConnector sslConnectorOneWay = new SslSelectChannelConnector(contextFactoryOneWay);
-      sslConnectorOneWay.setPort(configs.getOneWayAuthPort());
-      sslConnectorOneWay.setAcceptors(2);
-      sslConnectorTwoWay.setAcceptors(2);
-      serverForAgent.setConnectors(new Connector[]{sslConnectorOneWay, sslConnectorTwoWay});
+      //SslSelectChannelConnector sslConnectorOneWay = new SslSelectChannelConnector(contextFactoryOneWay);
+//      sslConnectorOneWay.setPort(configs.getOneWayAuthPort());
+//      sslConnectorOneWay.setAcceptors(2);
+//      sslConnectorTwoWay.setAcceptors(2);
+//      serverForAgent.setConnectors(new Connector[]{sslConnectorOneWay, sslConnectorTwoWay});
 
       ServletHolder sh = new ServletHolder(ServletContainer.class);
       sh.setInitParameter("com.sun.jersey.config.property.resourceConfigClass",
@@ -443,17 +466,17 @@ public class AmbariServer {
                     "org.apache.ambari.server.api.AmbariCsrfProtectionFilter"); */
       }
 
-      // Set jetty thread pool
-      QueuedThreadPool qtp = new QueuedThreadPool(configs.getAgentThreadPoolSize());
-      qtp.setName("qtp-ambari-agent");
-      serverForAgent.setThreadPool(qtp);
-
-      qtp = new QueuedThreadPool(configs.getClientThreadPoolSize());
-      qtp.setName("qtp-client");
-      server.setThreadPool(qtp);
+//      // Set jetty thread pool
+//      QueuedThreadPool qtp = new QueuedThreadPool(configs.getAgentThreadPoolSize());
+//      qtp.setName("qtp-ambari-agent");
+//      serverForAgent.setThreadPool(qtp);
+//
+//      qtp = new QueuedThreadPool(configs.getClientThreadPoolSize());
+//      qtp.setName("qtp-client");
+//      server.setThreadPool(qtp);
 
       /* Configure the API server to use the NIO connectors */
-      SelectChannelConnector apiConnector;
+      //SelectChannelConnector apiConnector;
 
       if (configs.getApiSSLAuthentication()) {
         String httpsKeystore = configsMap.get(Configuration.CLIENT_API_SSL_KSTR_DIR_NAME_KEY) +
@@ -466,25 +489,44 @@ public class AmbariServer {
 
         SslContextFactory contextFactoryApi = new SslContextFactory();
         disableInsecureProtocols(contextFactoryApi);
-        SslSelectChannelConnector sapiConnector = new SslSelectChannelConnector(contextFactoryApi);
-        sapiConnector.setPort(configs.getClientSSLApiPort());
-        sapiConnector.setKeystore(httpsKeystore);
-        sapiConnector.setTruststore(httpsTruststore);
-        sapiConnector.setPassword(httpsCrtPass);
-        sapiConnector.setKeyPassword(httpsCrtPass);
-        sapiConnector.setTrustPassword(httpsCrtPass);
-        sapiConnector.setKeystoreType(configsMap.get(Configuration.CLIENT_API_SSL_KSTR_TYPE_KEY));
-        sapiConnector.setTruststoreType(configsMap.get(Configuration.CLIENT_API_SSL_KSTR_TYPE_KEY));
-        sapiConnector.setMaxIdleTime(configs.getConnectionMaxIdleTime());
-        apiConnector = sapiConnector;
+//        SslSelectChannelConnector sapiConnector = new SslSelectChannelConnector(contextFactoryApi);
+//        sapiConnector.setPort(configs.getClientSSLApiPort());
+//        sapiConnector.setKeystore(httpsKeystore);
+//        sapiConnector.setTruststore(httpsTruststore);
+//        sapiConnector.setPassword(httpsCrtPass);
+//        sapiConnector.setKeyPassword(httpsCrtPass);
+//        sapiConnector.setTrustPassword(httpsCrtPass);
+//        sapiConnector.setKeystoreType(configsMap.get(Configuration.CLIENT_API_SSL_KSTR_TYPE_KEY));
+//        sapiConnector.setTruststoreType(configsMap.get(Configuration.CLIENT_API_SSL_KSTR_TYPE_KEY));
+//        sapiConnector.setMaxIdleTime(configs.getConnectionMaxIdleTime());
+
+        ServerConnector https = new ServerConnector(server);
+        https.setPort(configs.getClientSSLApiPort());
+        https.setIdleTimeout(configs.getConnectionMaxIdleTime());
+
+        contextFactoryApi.setKeyStorePath(httpsKeystore);
+        contextFactoryApi.setTrustStorePath(httpsTruststore);
+        contextFactoryApi.setKeyManagerPassword(httpsCrtPass);
+        contextFactoryApi.setKeyStorePassword(httpsCrtPass);
+        contextFactoryApi.setTrustStorePassword(httpsCrtPass);
+        contextFactoryApi.setKeyStoreType(configsMap.get(Configuration.CLIENT_API_SSL_KSTR_TYPE_KEY));
+        contextFactoryApi.setTrustStoreType(configsMap.get(Configuration.CLIENT_API_SSL_KSTR_TYPE_KEY));
+
+        //apiConnector = sapiConnector;
+          server.addConnector(https);
       }
       else  {
-        apiConnector = new SelectChannelConnector();
-        apiConnector.setPort(configs.getClientApiPort());
-        apiConnector.setMaxIdleTime(configs.getConnectionMaxIdleTime());
+          ServerConnector apiConnector = new ServerConnector(server);
+          apiConnector.setPort(configs.getClientApiPort());
+          apiConnector.setIdleTimeout(configs.getConnectionMaxIdleTime());
+//        apiConnector = new SelectChannelConnector();
+//        apiConnector.setPort(configs.getClientApiPort());
+//        apiConnector.setMaxIdleTime(configs.getConnectionMaxIdleTime());
+          server.addConnector(apiConnector);
       }
 
-      server.addConnector(apiConnector);
+      //server.addConnector(apiConnector);
+
 
       server.setStopAtShutdown(true);
       serverForAgent.setStopAtShutdown(true);
