@@ -2043,8 +2043,6 @@
           <artifactId>jetty-util-ajax</artifactId>
           <version>9.2.11.v20150529</version>
       </dependency>
-
-
   </dependencies>
 
   <pluginRepositories>
