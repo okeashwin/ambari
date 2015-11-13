@@ -243,14 +243,14 @@ public class AmbariServer {
     performStaticInjection();
     initDB();
       // Set jetty thread pool
-      QueuedThreadPool qtp = new QueuedThreadPool(configs.getAgentThreadPoolSize());
-      qtp.setName("qtp-ambari-agent");
+    QueuedThreadPool qtp = new QueuedThreadPool(configs.getClientThreadPoolSize());
+    qtp.setName("qtp-client");
 
     server = new Server(qtp);
     server.setSessionIdManager(sessionIdManager);
 
-      qtp = new QueuedThreadPool(configs.getClientThreadPoolSize());
-      qtp.setName("qtp-client");
+    qtp = new QueuedThreadPool(configs.getAgentThreadPoolSize());
+    qtp.setName("qtp-ambari-agent");
 
     Server serverForAgent = new Server(qtp);
 
