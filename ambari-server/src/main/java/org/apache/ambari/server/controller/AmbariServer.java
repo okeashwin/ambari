@@ -341,9 +341,15 @@ public class AmbariServer {
       //Secured connector for 2-way auth
       SslContextFactory contextFactoryTwoWay = new SslContextFactory();
       disableInsecureProtocols(contextFactoryTwoWay);
-//      SslSelectChannelConnector sslConnectorTwoWay = new
-//          SslSelectChannelConnector(contextFactoryTwoWay);
-//      sslConnectorTwoWay.setPort(configs.getTwoWayAuthPort());
+      /*
+
+      Code with Jetty 8 APIs. Currently being commented out for a test migration to Jetty 9
+
+      SslSelectChannelConnector sslConnectorTwoWay = new
+          SslSelectChannelConnector(contextFactoryTwoWay);
+      sslConnectorTwoWay.setPort(configs.getTwoWayAuthPort());
+
+      */
 
       Map<String, String> configsMap = configs.getConfigsMap();
       String keystore = configsMap.get(Configuration.SRVR_KSTR_DIR_KEY) +
@@ -351,14 +357,21 @@ public class AmbariServer {
       String truststore = configsMap.get(Configuration.SRVR_KSTR_DIR_KEY) +
           File.separator + configsMap.get(Configuration.TSTR_NAME_KEY);
       String srvrCrtPass = configsMap.get(Configuration.SRVR_CRT_PASS_KEY);
-//      sslConnectorTwoWay.setKeystore(keystore);
-//      sslConnectorTwoWay.setTruststore(truststore);
-//      sslConnectorTwoWay.setPassword(srvrCrtPass);
-//      sslConnectorTwoWay.setKeyPassword(srvrCrtPass);
-//      sslConnectorTwoWay.setTrustPassword(srvrCrtPass);
-//      sslConnectorTwoWay.setKeystoreType(configsMap.get(Configuration.KSTR_TYPE_KEY));
-//      sslConnectorTwoWay.setTruststoreType(configsMap.get(Configuration.TSTR_TYPE_KEY));
-//      sslConnectorTwoWay.setNeedClientAuth(configs.getTwoWaySsl());
+
+      /*
+
+      Code with Jetty 8 APIs. Currently being commented out for a test migration to Jetty 9
+
+      sslConnectorTwoWay.setKeystore(keystore);
+      sslConnectorTwoWay.setTruststore(truststore);
+      sslConnectorTwoWay.setPassword(srvrCrtPass);
+      sslConnectorTwoWay.setKeyPassword(srvrCrtPass);
+      sslConnectorTwoWay.setTrustPassword(srvrCrtPass);
+      sslConnectorTwoWay.setKeystoreType(configsMap.get(Configuration.KSTR_TYPE_KEY));
+      sslConnectorTwoWay.setTruststoreType(configsMap.get(Configuration.TSTR_TYPE_KEY));
+      sslConnectorTwoWay.setNeedClientAuth(configs.getTwoWaySsl());
+
+      */
 
       contextFactoryTwoWay.setKeyStorePath(keystore);
       contextFactoryTwoWay.setTrustStorePath(truststore);
@@ -392,12 +405,18 @@ public class AmbariServer {
 
         serverForAgent.setConnectors(new Connector[]{httpOneWay, httpTwoWay});
 
-      //Secured connector for 1-way auth
-      //SslSelectChannelConnector sslConnectorOneWay = new SslSelectChannelConnector(contextFactoryOneWay);
-//      sslConnectorOneWay.setPort(configs.getOneWayAuthPort());
-//      sslConnectorOneWay.setAcceptors(2);
-//      sslConnectorTwoWay.setAcceptors(2);
-//      serverForAgent.setConnectors(new Connector[]{sslConnectorOneWay, sslConnectorTwoWay});
+      /*
+
+      Code with Jetty 8 APIs. Currently being commented out for a test migration to Jetty 9
+
+      // Secured connector for 1-way auth
+      SslSelectChannelConnector sslConnectorOneWay = new SslSelectChannelConnector(contextFactoryOneWay);
+      sslConnectorOneWay.setPort(configs.getOneWayAuthPort());
+      sslConnectorOneWay.setAcceptors(2);
+      sslConnectorTwoWay.setAcceptors(2);
+      serverForAgent.setConnectors(new Connector[]{sslConnectorOneWay, sslConnectorTwoWay});
+
+      */
 
       ServletHolder sh = new ServletHolder(ServletContainer.class);
       sh.setInitParameter("com.sun.jersey.config.property.resourceConfigClass",
@@ -466,16 +485,24 @@ public class AmbariServer {
                     "org.apache.ambari.server.api.AmbariCsrfProtectionFilter"); */
       }
 
-//      // Set jetty thread pool
-//      QueuedThreadPool qtp = new QueuedThreadPool(configs.getAgentThreadPoolSize());
-//      qtp.setName("qtp-ambari-agent");
-//      serverForAgent.setThreadPool(qtp);
-//
-//      qtp = new QueuedThreadPool(configs.getClientThreadPoolSize());
-//      qtp.setName("qtp-client");
-//      server.setThreadPool(qtp);
+      /*
+
+      Code with Jetty 8 APIs. Currently being commented out for a test migration to Jetty 9
+
+      // Set jetty thread pool
+      QueuedThreadPool qtp = new QueuedThreadPool(configs.getAgentThreadPoolSize());
+      qtp.setName("qtp-ambari-agent");
+      serverForAgent.setThreadPool(qtp);
+
+      qtp = new QueuedThreadPool(configs.getClientThreadPoolSize());
+      qtp.setName("qtp-client");
+      server.setThreadPool(qtp);
+
+      */
 
       /* Configure the API server to use the NIO connectors */
+
+
       //SelectChannelConnector apiConnector;
 
       if (configs.getApiSSLAuthentication()) {
@@ -489,16 +516,23 @@ public class AmbariServer {
 
         SslContextFactory contextFactoryApi = new SslContextFactory();
         disableInsecureProtocols(contextFactoryApi);
-//        SslSelectChannelConnector sapiConnector = new SslSelectChannelConnector(contextFactoryApi);
-//        sapiConnector.setPort(configs.getClientSSLApiPort());
-//        sapiConnector.setKeystore(httpsKeystore);
-//        sapiConnector.setTruststore(httpsTruststore);
-//        sapiConnector.setPassword(httpsCrtPass);
-//        sapiConnector.setKeyPassword(httpsCrtPass);
-//        sapiConnector.setTrustPassword(httpsCrtPass);
-//        sapiConnector.setKeystoreType(configsMap.get(Configuration.CLIENT_API_SSL_KSTR_TYPE_KEY));
-//        sapiConnector.setTruststoreType(configsMap.get(Configuration.CLIENT_API_SSL_KSTR_TYPE_KEY));
-//        sapiConnector.setMaxIdleTime(configs.getConnectionMaxIdleTime());
+
+        /*
+
+        Code with Jetty 8 APIs. Currently being commented out for a test migration to Jetty 9
+
+        SslSelectChannelConnector sapiConnector = new SslSelectChannelConnector(contextFactoryApi);
+        sapiConnector.setPort(configs.getClientSSLApiPort());
+        sapiConnector.setKeystore(httpsKeystore);
+        sapiConnector.setTruststore(httpsTruststore);
+        sapiConnector.setPassword(httpsCrtPass);
+        sapiConnector.setKeyPassword(httpsCrtPass);
+        sapiConnector.setTrustPassword(httpsCrtPass);
+        sapiConnector.setKeystoreType(configsMap.get(Configuration.CLIENT_API_SSL_KSTR_TYPE_KEY));
+        sapiConnector.setTruststoreType(configsMap.get(Configuration.CLIENT_API_SSL_KSTR_TYPE_KEY));
+        sapiConnector.setMaxIdleTime(configs.getConnectionMaxIdleTime());
+
+        */
 
         ServerConnector https = new ServerConnector(server);
         https.setPort(configs.getClientSSLApiPort());
@@ -512,16 +546,23 @@ public class AmbariServer {
         contextFactoryApi.setKeyStoreType(configsMap.get(Configuration.CLIENT_API_SSL_KSTR_TYPE_KEY));
         contextFactoryApi.setTrustStoreType(configsMap.get(Configuration.CLIENT_API_SSL_KSTR_TYPE_KEY));
 
-        //apiConnector = sapiConnector;
+        // apiConnector = sapiConnector;
           server.addConnector(https);
       }
       else  {
           ServerConnector apiConnector = new ServerConnector(server);
           apiConnector.setPort(configs.getClientApiPort());
           apiConnector.setIdleTimeout(configs.getConnectionMaxIdleTime());
-//        apiConnector = new SelectChannelConnector();
-//        apiConnector.setPort(configs.getClientApiPort());
-//        apiConnector.setMaxIdleTime(configs.getConnectionMaxIdleTime());
+
+        /*
+
+        Code with Jetty 8 APIs. Currently being commented out for a test migration to Jetty 9
+
+        apiConnector = new SelectChannelConnector();
+        apiConnector.setPort(configs.getClientApiPort());
+        apiConnector.setMaxIdleTime(configs.getConnectionMaxIdleTime());
+
+        */
           server.addConnector(apiConnector);
       }
 

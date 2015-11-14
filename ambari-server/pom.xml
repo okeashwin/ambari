@@ -2028,20 +2028,16 @@
       <artifactId>javax-websocket-client-impl</artifactId>
       <version>${jetty.version}</version>
     </dependency>
-    <dependency>
-      <groupId>org.json</groupId>
-      <artifactId>json</artifactId>
-      <version>20150729</version>
-    </dependency>
+
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-util</artifactId>
-      <version>9.2.11.v20150529</version>
+      <version>${jetty.version}</version>
     </dependency>
       <dependency>
           <groupId>org.eclipse.jetty</groupId>
           <artifactId>jetty-util-ajax</artifactId>
-          <version>9.2.11.v20150529</version>
+          <version>${jetty.version}</version>
       </dependency>
   </dependencies>
 
