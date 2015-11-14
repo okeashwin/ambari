@@ -22,9 +22,6 @@ import javax.websocket.*;
 import javax.websocket.server.ServerEndpoint;
 import java.io.IOException;
 
-/**
- * Created by nisarg on 10/25/15.
- */
 @ServerEndpoint("/")
 public class WebSocketServer {
 
@@ -34,13 +31,11 @@ public class WebSocketServer {
     }
     @OnMessage
     public void onMessage(String txt, Session session) throws IOException {
-        System.out.println("Message received: " + txt);
         session.getBasicRemote().sendText(txt.toUpperCase());
     }
 
     @OnClose
     public void onClose(CloseReason reason, Session session) {
-        System.out.println("Closing a WebSocket due to " + reason.getReasonPhrase());
 
     }
 }

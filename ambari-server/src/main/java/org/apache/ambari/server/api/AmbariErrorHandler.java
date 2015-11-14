@@ -23,6 +23,12 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import org.eclipse.jetty.http.HttpStatus;
 import org.eclipse.jetty.http.MimeTypes;
+/*
+
+Code being commented out for a test migration to Jetty 9
+
+import org.eclipse.jetty.server.AbstractHttpConnection;
+*/
 import org.eclipse.jetty.server.HttpConnection;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.ErrorHandler;
@@ -43,14 +49,46 @@ public class AmbariErrorHandler extends ErrorHandler{
 
   @Override
   public void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response) throws IOException {
+    /*
+
+    Code being commented out for a test migration to Jetty 9
+
+    AbstractHttpConnection connection = AbstractHttpConnection.getCurrentConnection();
+    connection.getRequest().setHandled(true);
+
+    */
+
     HttpConnection connection = HttpConnection.getCurrentConnection();
     connection.getHttpChannel().getRequest().setHandled(true);
+
+
+    /*
+
+    Code being commented out for a test migration to Jetty 9
+
+    response.setContentType(MimeTypes.TEXT_PLAIN);
+    */
 
     response.setContentType(String.valueOf(MimeTypes.Type.TEXT_PLAIN));
 
     Map<String, Object> errorMap = new LinkedHashMap<String, Object>();
+
+    /*
+    Code being commented out for a test migration to Jetty 9
+
+    int code = connection.getResponse().getStatus();
+    */
+
     int code = connection.getHttpChannel().getResponse().getStatus();
     errorMap.put("status", code);
+
+    /*
+    Code being commented out for a test migration to Jetty 9
+
+    String message = connection.getResponse().getReason();
+    */
+
+
     String message = connection.getHttpChannel().getResponse().getReason();
     if (message == null) {
       message = HttpStatus.getMessage(code);

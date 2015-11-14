@@ -63,7 +63,13 @@ public class AmbariErrorHandlerTest {
 
     server.start();
 
-    //int localPort = server.getConnectors()[0].getLocalPort();
+    /*
+
+    Code being commented out for a test migration to Jetty 9
+    
+    int localPort = server.getConnectors()[0].getLocalPort();
+
+    */
     Connector connector = server.getConnectors()[0];
     int localPort = ((ServerConnector)connector).getLocalPort();
 

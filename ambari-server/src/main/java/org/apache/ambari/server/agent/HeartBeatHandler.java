@@ -435,12 +435,14 @@ public class HeartBeatHandler {
     }
     if(persistExists){
         try {
+
+          /*
+            A test instantiation of the websocket client here to just check on the basic functionality.
+           */
             String dest = "ws://localhost:8080/";
             WebSocketClient socket = new WebSocketClient();
             WebSocketContainer container = ContainerProvider.getWebSocketContainer();
             container.connectToServer(socket, new URI(dest));
-
-            socket.getLatch().await();
             socket.sendMessage("Hello World");
             Thread.sleep(10000l);
         } catch (Throwable t) {
