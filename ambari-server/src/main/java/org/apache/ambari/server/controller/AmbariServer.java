@@ -394,13 +394,19 @@ public class AmbariServer {
       contextFactoryOneWay.setNeedClientAuth(false);
       disableInsecureProtocols(contextFactoryOneWay);
 
-        //Server Connector for HTTP
-        ServerConnector httpOneWay = new ServerConnector(serverForAgent);
+      HttpConfiguration httpConfigurationOneWay = new HttpConfiguration();
+      httpConfigurationOneWay.setSecurePort(configs.getOneWayAuthPort());
+
+      HttpConfiguration httpConfigurationTwoWay = new HttpConfiguration();
+      httpConfigurationTwoWay.setSecurePort(configs.getOneWayAuthPort());
+
+      //Server Connector for HTTP
+        ServerConnector httpOneWay = new ServerConnector(serverForAgent, new SslConnectionFactory(contextFactoryOneWay, "http/1.1"), new HttpConnectionFactory(httpConfigurationOneWay) );
         httpOneWay.setPort(configs.getOneWayAuthPort());
         httpOneWay.setAcceptQueueSize(2);
 
-        ServerConnector httpTwoWay = new ServerConnector(serverForAgent);
-        httpTwoWay.setPort(configs.getOneWayAuthPort());
+        ServerConnector httpTwoWay = new ServerConnector(serverForAgent, new SslConnectionFactory(contextFactoryTwoWay, "http/1.1"), new HttpConnectionFactory(httpConfigurationTwoWay));
+        httpTwoWay.setPort(configs.getTwoWayAuthPort());
         httpTwoWay.setAcceptQueueSize(2);
 
         serverForAgent.setConnectors(new Connector[]{httpOneWay, httpTwoWay});
@@ -505,6 +511,8 @@ public class AmbariServer {
 
       //SelectChannelConnector apiConnector;
 
+
+
       if (configs.getApiSSLAuthentication()) {
         String httpsKeystore = configsMap.get(Configuration.CLIENT_API_SSL_KSTR_DIR_NAME_KEY) +
           File.separator + configsMap.get(Configuration.CLIENT_API_SSL_KSTR_NAME_KEY);
@@ -514,8 +522,8 @@ public class AmbariServer {
 
         String httpsCrtPass = configsMap.get(Configuration.CLIENT_API_SSL_CRT_PASS_KEY);
 
-        SslContextFactory contextFactoryApi = new SslContextFactory();
-        disableInsecureProtocols(contextFactoryApi);
+        SslContextFactory contextFactorySApi = new SslContextFactory();
+        disableInsecureProtocols(contextFactorySApi);
 
         /*
 
@@ -534,23 +542,32 @@ public class AmbariServer {
 
         */
 
-        ServerConnector https = new ServerConnector(server);
+        HttpConfiguration httpConfigurationSSL = new HttpConfiguration();
+        httpConfigurationSSL.setSecurePort(configs.getClientSSLApiPort());
+
+        contextFactorySApi.setKeyStorePath(httpsKeystore);
+        contextFactorySApi.setTrustStorePath(httpsTruststore);
+        contextFactorySApi.setKeyManagerPassword(httpsCrtPass);
+        contextFactorySApi.setKeyStorePassword(httpsCrtPass);
+        contextFactorySApi.setTrustStorePassword(httpsCrtPass);
+        contextFactorySApi.setKeyStoreType(configsMap.get(Configuration.CLIENT_API_SSL_KSTR_TYPE_KEY));
+        contextFactorySApi.setTrustStoreType(configsMap.get(Configuration.CLIENT_API_SSL_KSTR_TYPE_KEY));
+
+
+        ServerConnector https = new ServerConnector(server, new SslConnectionFactory(contextFactorySApi, "http/1.1"), new HttpConnectionFactory(httpConfigurationSSL));
         https.setPort(configs.getClientSSLApiPort());
         https.setIdleTimeout(configs.getConnectionMaxIdleTime());
 
-        contextFactoryApi.setKeyStorePath(httpsKeystore);
-        contextFactoryApi.setTrustStorePath(httpsTruststore);
-        contextFactoryApi.setKeyManagerPassword(httpsCrtPass);
-        contextFactoryApi.setKeyStorePassword(httpsCrtPass);
-        contextFactoryApi.setTrustStorePassword(httpsCrtPass);
-        contextFactoryApi.setKeyStoreType(configsMap.get(Configuration.CLIENT_API_SSL_KSTR_TYPE_KEY));
-        contextFactoryApi.setTrustStoreType(configsMap.get(Configuration.CLIENT_API_SSL_KSTR_TYPE_KEY));
-
         // apiConnector = sapiConnector;
-          server.addConnector(https);
+
+        server.addConnector(https);
       }
       else  {
-          ServerConnector apiConnector = new ServerConnector(server);
+
+          HttpConfiguration httpConfiguration = new HttpConfiguration();
+          httpConfiguration.setSecurePort(configs.getClientApiPort());
+
+          ServerConnector apiConnector = new ServerConnector(server, new SslConnectionFactory(), new HttpConnectionFactory(httpConfiguration));
           apiConnector.setPort(configs.getClientApiPort());
           apiConnector.setIdleTimeout(configs.getConnectionMaxIdleTime());
 
