@@ -398,16 +398,16 @@ public class AmbariServer {
       httpConfigurationOneWay.setSecurePort(configs.getOneWayAuthPort());
 
       HttpConfiguration httpConfigurationTwoWay = new HttpConfiguration();
-      httpConfigurationTwoWay.setSecurePort(configs.getOneWayAuthPort());
+      httpConfigurationTwoWay.setSecurePort(configs.getTwoWayAuthPort());
 
       //Server Connector for HTTP
-        ServerConnector httpOneWay = new ServerConnector(serverForAgent, new SslConnectionFactory(contextFactoryOneWay, "http/1.1"), new HttpConnectionFactory(httpConfigurationOneWay) );
+        ServerConnector httpOneWay = new ServerConnector(serverForAgent, 2, 0, new SslConnectionFactory(contextFactoryOneWay, "http/1.1"), new HttpConnectionFactory(httpConfigurationOneWay) );
         httpOneWay.setPort(configs.getOneWayAuthPort());
-        httpOneWay.setAcceptQueueSize(2);
+        //httpOneWay.setAcceptQueueSize(2);
 
-        ServerConnector httpTwoWay = new ServerConnector(serverForAgent, new SslConnectionFactory(contextFactoryTwoWay, "http/1.1"), new HttpConnectionFactory(httpConfigurationTwoWay));
+        ServerConnector httpTwoWay = new ServerConnector(serverForAgent, 2, 0, new SslConnectionFactory(contextFactoryTwoWay, "http/1.1"), new HttpConnectionFactory(httpConfigurationTwoWay));
         httpTwoWay.setPort(configs.getTwoWayAuthPort());
-        httpTwoWay.setAcceptQueueSize(2);
+        //httpTwoWay.setAcceptQueueSize(2);
 
         serverForAgent.setConnectors(new Connector[]{httpOneWay, httpTwoWay});
 
@@ -567,7 +567,7 @@ public class AmbariServer {
           HttpConfiguration httpConfiguration = new HttpConfiguration();
           httpConfiguration.setSecurePort(configs.getClientApiPort());
 
-          ServerConnector apiConnector = new ServerConnector(server, new SslConnectionFactory(), new HttpConnectionFactory(httpConfiguration));
+          ServerConnector apiConnector = new ServerConnector(server, new HttpConnectionFactory(httpConfiguration));
           apiConnector.setPort(configs.getClientApiPort());
           apiConnector.setIdleTimeout(configs.getConnectionMaxIdleTime());
 
