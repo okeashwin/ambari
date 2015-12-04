@@ -1773,15 +1773,11 @@
       <artifactId>jetty-webapp</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.mortbay.jetty</groupId>
-      <artifactId>jsp-2.1</artifactId>
-      <version>6.1.9</version>
-    </dependency>
-    <!--<dependency>
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-jsp</artifactId>
       <version>9.2.11.v20150529</version>
     </dependency>
+<!--
     jsp support for jetty
     <dependency>
       <groupId>org.mortbay.jetty</groupId>
